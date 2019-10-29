@@ -1,6 +1,6 @@
 ---
 title: "My R Markdown document!"
-author: "Charles Zhang"
+author: "Charles Zhang 最牛逼"
 output:
   html_document:
     df_print: paged
