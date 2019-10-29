@@ -1,1 +1,1 @@
-# Rstudio
+# STAT/COMP 112 Intro to the Data Science
