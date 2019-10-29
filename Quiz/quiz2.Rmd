@@ -1,0 +1,119 @@
+---
+title: "Quiz 2"
+author: "Charles Zhang"
+output: 
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(tidy = FALSE, message=FALSE, warning=FALSE)
+```
+
+```{r, message = FALSE, warning=FALSE}
+library(tidyverse)
+library(babynames)
+library(lubridate)
+library(nycflights13) #may need to install but likely not
+```
+
+GENERAL ADVICE: 
+
+a) It is better to have partial answers for all problems than complete answers for some but no answers for others.  
+
+b) Think about all the steps you need to take before jumping right into the code. If you find yourself getting stuck on the code, write out how you would do this by hand - I'll give you some partial credit!  
+
+c) SAVE AND KNIT OFTEN!!!
+
+The following exercises use the `babynames` dataset. 
+
+(@) Display a table with the 5 years with the highest proportions of females named "Lisa", order them from largest to smallest proportion and only keep the year and the proportion.
+
+```{r}
+babynames %>% 
+  filter(name=="Lisa", sex=="F") %>% 
+  arrange(desc(prop)) %>% 
+  top_n(5) %>% 
+  select(year, prop)
+```
+
+(@) For each decade, find how many of the years had more than 1\% of males named "Christopher". For example, there were not any years from 1880 - 1889 that had more than 1\% of males named "Christopher". So, for the 1880's, the answer would be 0. The final table should have a column called `decade` and a column called `years_christopher` with the number of years in that decade with more than 1\% of males named "Christopher". Only display the decades where the number is greater than 0. HINT: You can compute decade with `decade = floor(year/10)*10`.
+
+```{r}
+babynames %>% 
+  mutate(decade = floor(year/10)*10) %>%
+  filter(name=="Christopher", sex=="M") %>% 
+  mutate(larger_than_1_percent=prop>0.01) %>% 
+  group_by(decade) %>% 
+  summarise(years_christopher=sum(larger_than_1_percent)) %>% 
+  filter(years_christopher > 0)
+```
+
+The following exercises use the `flights`, `airlines`, and `airport` datasets from the `nycflights13` package. It contains flight data from 2013 for the three airports around New York City. Also, there is some missing data, so please use the dataset `flights_no_na`, rather than `flights`, for all your analysis!
+
+```{r}
+data("flights")
+data("airlines")
+data("airports")
+```
+
+```{r}
+flights_no_na <-
+  flights %>% 
+  drop_na(arr_delay)
+```
+
+
+(@) Use the `flights_no_na` data to find in which month (using month number is fine) there were the longest arrival delays, on average. Arrange the results from longest to shortest average delays.
+
+```{r}
+flights_no_na %>% 
+  group_by(month) %>% 
+  summarise(avr_delay=mean(arr_delay)) %>% 
+  arrange(desc(avr_delay))
+```
+> There were the longest arrival delays on average in July. 
+
+(@) Use the `flights_no_na` and `airlines` data to find which airline (use the name, not the abbreviation) had the longest delays, from shortest to longest.
+
+```{r}
+flights_no_na %>% 
+  inner_join(airlines, by = "carrier") %>% 
+  group_by(name) %>% 
+  summarise(avr_delay=mean(arr_delay)) %>% 
+  arrange(avr_delay) 
+
+flights_no_na %>% 
+  inner_join(airlines, by = "carrier") %>% 
+  group_by(name) %>% 
+  summarise(total_delay=sum(arr_delay)) %>% 
+  arrange(total_delay) 
+
+```
+> Frontier Airlines Inc. had the longest average delays, but ExpressJet Airlines Inc. had the longest delays in total.
+
+(@) Use the `flights_no_na` and `airports` data to create a table that shows the average arrival delay for each of the three departure airports (by name, not abbreviation) for each day of the week (name, not number). HINT: the `wday` function will be useful.
+
+```{r}
+c<-airports %>% 
+  rename(origin = faa) %>% 
+  semi_join(flights) %>% 
+  select(origin, name)
+
+avr_arr_delay<-flights_no_na %>% 
+  mutate(day_of_week=wday(time_hour, label=TRUE)) %>% 
+  inner_join(c,by="origin") %>% 
+  group_by(name, day_of_week) %>% 
+  summarise(avr_delay=mean(arr_delay)) 
+
+avr_arr_delay
+
+```
+
+(@) EXTRA CREDIT: Modify the table you created above so that day of the week is in the first column, and there is a column for each of the three departure airports.
+
+```{r}
+avr_arr_delay %>% 
+  pivot_wider(names_from = name, 
+              values_from = avr_delay) 
+```

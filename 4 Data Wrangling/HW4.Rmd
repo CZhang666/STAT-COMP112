@@ -1,0 +1,308 @@
+---
+title: "HW4"
+author: "Charles Zhang"
+output: html_document
+---
+
+```{r message=FALSE}
+library(mosaicData) 
+library(babynames) 
+library(lubridate) 
+library(ggthemes)
+library(tidyverse)
+```
+
+*Exercise 3.1*
+
+a. Add a new boolean (true or false) variable called has2000 that indicates whether there were more than 2000 babies of that sex with that name in each year. Display the first six rows of your new table.
+
+```{r}
+
+babynames %>%
+  mutate(has2000=(n>2000)) %>%
+  head()
+
+```
+
+b. Compute the proportion of names each year that had more than 2000 babies. TIP: you can use TRUEs and FALSEs mathematically. TRUE = 1 and FALSE = 0.
+
+```{r}
+
+babynames %>%
+  mutate(has2000=(n>2000)) %>%
+  group_by(year) %>%
+  summarize(has200 = sum(has2000)/n())
+
+```
+
+*Exercise 3.2*
+
+a. Find the number of total babies per year. Save this as a new dataset.
+
+```{r}
+
+bbperyr <- babynames %>%
+  group_by(year) %>%
+  summarize(total=sum(n))
+
+bbperyr
+
+```
+
+b.Sort the dataset above from most babies to least babies. Which year were the most babies born? Least?
+
+```{r}
+
+bbperyr <- babynames %>%
+  group_by(year) %>%
+  summarize(total=sum(n)) 
+
+bbperyr %>%
+  arrange(desc(total))
+
+bbperyr %>%
+  arrange(total)
+
+# 1957 is the year that most babies were born and 1881 is the year that least babies were bron.
+
+```
+
+c. Use the dataset from the first part to graph the number of babies born over time. Include a nice label for the x and y axes. Describe what you see.
+
+```{r}
+
+bbperyr %>%
+  ggplot(aes(x=year, y=total))+
+  geom_point()+
+  labs(y="total births/year")
+
+```
+
+"""Overall the total birth per year is increasing before 1980 and becomes relatively steady, but there are significant decreases in 1930 and 1970
+
+*Exercise 3.3*
+
+a. Find the most popular names for males, over all years and ordered by popularity.
+
+```{r}
+
+babynames %>%
+  group_by(sex, name) %>%
+  filter(sex=="M") %>%
+  summarize(total=sum(n)) %>%
+  arrange(desc(total))
+
+# James is the most popular males name. 
+
+```
+
+b. Find the most popular names for females, over all years and ordered by popularity.
+
+```{r}
+
+babynames %>%
+  group_by(sex, name) %>%
+  filter(sex=="F") %>%
+  summarize(total=sum(n)) %>%
+  arrange(desc(total))
+
+# Mary is the most females name. 
+
+```
+
+*Exercise 3.4*
+
+a. Plot the number of distinct/unique names by year and sex (ie. a different line for males and females). Include nice x and y labels.
+
+```{r}
+babynames %>% 
+  group_by(year, sex) %>% 
+  summarise(c=n()) %>% 
+  ggplot(aes(x=year, y=c, color=sex)) +
+  geom_line() +
+  labs(x="Year", y="Name Counts")
+
+```
+
+b. Find the top five names for males and females for each year. Tip: Use top_n or head along with group_by.
+
+```{r}
+
+babynames %>%
+  group_by(year,sex) %>%
+  top_n(5,n) 
+ 
+```
+
+c. Start with the code from the previous problem. Find the proportion of names that are in the top 5 for each sex and year and plot it by year.
+
+```{r}
+
+babynames %>% 
+  group_by(year, sex) %>% 
+  top_n(5,n) %>% 
+  summarise(top_five_p = sum(prop))
+
+```
+
+*Exercise 3.5*
+
+Compute the decade for each observation using the code below. Then, summarize the names by decade. Find the counts and proportion of each of the baby names by decade and sex. For the proportion, just find the proportion based on the total number of names in the data we have in this dataset. Save this to a new dataset called names_by_decade. Print the first 6 rows of the dataset.
+
+```{r}
+
+names_by_decade <- babynames %>% 
+  mutate(decade = floor(year/10)*10) %>%
+  group_by(decade, sex, name) %>%
+  summarise(n=sum(n)) %>% 
+  ungroup() %>% 
+  group_by(decade, sex) %>% 
+  mutate(p = n/sum(n)) %>%
+  ungroup()
+
+names_by_decade %>% 
+  head()
+
+```
+
+Exercise 3.6
+
+Use the names_by_decade dataset you created in the previous exercise to find the most popular name each decade. Create a table that shows the sex, decade, the most popular name, and the proportion of babies in the decade with that name. Also create a plot, but plot the text of the most popular name, rather than just points (hint: geom_text()).
+
+```{r}
+popularname <- names_by_decade %>% 
+  group_by(decade, sex) %>% 
+  top_n(1, wt=p) %>% 
+  select(decade, sex, name, p)
+
+popularname
+
+popularname%>% 
+  ggplot(aes(x=decade, y=p, label=name))+
+  geom_text()
+
+```
+
+## 4 Exercises Part 2: US Births
+
+*Exercise 4.1 (Total Across States) *
+
+Create a new data table, DailyBirths, that adds up all the births for each day across all the states. Plot daily births vs date.
+
+```{r}
+
+DailyBirths <-
+  Birthdays %>%
+  group_by(date) %>%
+  summarize(total = sum(births))
+DailyBirths
+DailyBirths %>% 
+  ggplot(aes(x=date, y=total)) +
+  geom_point()
+
+```
+
+*Exercise 4.2 (Examine Seasonality)*
+To examine seasonality in birth rates, look at the number of births aggregated over all the years by
+a. each week
+```{r}
+ggplot(DailyBirths, aes(x=week(date), y=total)) +
+  geom_point()
+```
+
+b. each month
+```{r}
+ggplot(DailyBirths, aes(x=month(date), y=total)) +
+  geom_point()
+```
+
+c. each Julian day
+```{R}
+ggplot(DailyBirths, aes(x=yday(date), y=total)) +
+  geom_point()
+```
+
+When are the most babies born? The fewest?
+
+"""Summer is the time most babies born and winter is the time the fewest babies born"""
+
+*Exercise 4.3 (Examine Patterns within the Week)*
+
+To examine patterns within the week, make a side by side box plots showing the number of births by day of the week. Interpret your results.
+
+```{r}
+ggplot(DailyBirths, aes(group=wday(date), y=total)) +
+  geom_boxplot()
+```
+
+"""There would be more people born in the weekday than in the weekend."""
+
+*Exercise 4.4 (Two Year Sample)*
+
+Create a new dataset that filters the DailyBirths dataset you made above to a two-year span that falls in the 1980s, say 1980-1981 (Hint: use the year() function to extract years). Add a variable to the dataset that is a ymd (from lubridate package) version of the date and a variable for day of the week. Call your new dataset MyTwoYears. Then create a plot that shows the number of births over time with a different color line for each day of the week. Make sure to choose your font size, line widths, and color scheme to make your figure legible. Create nice labels as well. Explain the pattern that you see.
+
+The plot you generate for Exercise 4.4 should be generally consistent with the weekend effect and seasonal patterns we have already seen; however, a few days each year stand out as exceptions. We are going to examine the hypothesis that these are holidays. You can find a data set listing US federal holidays at http://www.macalester.edu/~dshuman1/data/112/US-Holidays.csv. Read it in as follows:
+```{r}
+Holidays <- read_csv("http://www.macalester.edu/~dshuman1/data/112/US-Holidays.csv") %>%
+  mutate(date = dmy(date))
+```
+
+```{r}
+
+MyTwoYears <-
+  DailyBirths %>% 
+  filter(year(date) %in% 1980:1981) %>% 
+  mutate(date2=ymd(date), day_of_week = wday(date, label=TRUE))
+
+MyTwoYears %>% 
+  ggplot(aes(x=date2, y=total, color=day_of_week))+
+  geom_line(size=1)+
+  theme(text = element_text(size=20))+
+  labs(x="Date", y="Total Birth")
+  
+```
+
+"""It follows the pattern that most babies born in the summer and least in the winter, and born more in weekday than weekend."""
+
+*Exercise 4.5 (Holidays)*
+
+Now we will update the plot from Exercise 4.4 to include the holidays.
+
+a. Create a new dataset called my_two_new where you add a variable to MyTwoYears called is_holiday. The new variable should be TRUE when the day is a holiday, and FALSE otherwise. One way to do this is with the transformation verb %in%, for instance, is_holiday = date %in% Holidays$date.
+
+```{r}
+my_two_new <- MyTwoYears %>% 
+  mutate(is_holiday=date2 %in% Holidays$date)
+
+my_two_new
+```
+
+b. Add a geom_point layer to your plot that sets the color of the points based on the day of the week and the shape of the points based on whether or not the day is a holiday.
+
+```{r}
+my_two_new %>% 
+  ggplot(aes(x=date2, y=total, color=day_of_week, shape=is_holiday)) + 
+  layer(geom="point",stat = "identity", position = "identity")+
+  theme(text = element_text(size=20)) +
+  labs(x="Date", y="Total Birth") +
+  geom_line()
+  
+```
+
+c. (EXTRA CREDIT) Finally, some holidays seem to have more of an effect than others. It would be helpful to label them. Use geom_text or annotate to add labels to the holidays that seem to have an effect. Hints: You may have to make up a y-coordinate for each label. You can set the orientation of each label with the angle argument.
+
+```{r,fig.height = 6, fig.width = 12}
+my_two_new %>% 
+  ggplot(aes(x=date2, y=total, color=day_of_week, shape=is_holiday, label=is_holiday)) + 
+  layer(geom="point",stat = "identity", position = "identity")+
+  theme(text = element_text(size=20)) +
+  labs(x="Date", y="Total Birth") +
+  geom_line()+
+  geom_text(angle=45)
+```
+
+
+
+
+
+

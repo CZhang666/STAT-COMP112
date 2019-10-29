@@ -1,0 +1,262 @@
+---
+title: "HW7"
+author: "Charles Zhang"
+output: html_document
+---
+
+## Activity 11: Adding Basic Interactivity and Animation
+
+```{r message=FALSE}
+library(tidyverse)
+library(lubridate)
+library(ggmap)
+library(babynames)
+library(plotly) 
+library(gganimate) 
+library(gifski) 
+library(transformr) 
+library(fivethirtyeight)
+library(gplots) 
+library(RColorBrewer) 
+library(sf) 
+library(leaflet) 
+library(carData) 
+```
+
+
+*Exercise 1.1*
+Enhance two plots you have created previously in this class by adding rendering them using ggplotly. Describe how it makes your graph better.
+```{r,message = FALSE, warning=FALSE}
+hotdogs <- read_csv("http://datasets.flowingdata.com/hot-dog-contest-winners.csv")
+graph1<-ggplot(hotdogs, aes(x=Year, y=`Dogs eaten`)) +
+      geom_line()
+ggplotly(graph1)
+```
+
+> In this graph, the audience would know the exact number of hot dogs eaten each year by this graph without being messy.
+
+
+```{r,message = FALSE, warning=FALSE}
+DailyGroups <- read_csv("https://www.macalester.edu/~dshuman1/data/112/daily-group-assignment.csv")
+
+graph2<-daily_show_guests %>% 
+  inner_join(DailyGroups, by="group") %>% 
+  select(broad_group,show,year) %>% 
+  group_by(year, broad_group) %>% 
+  summarise(n=n()) %>% 
+  mutate(sum=sum(n), p=n/sum) %>% 
+  ggplot(aes(x=year, y=p, color=broad_group))+
+  geom_line()+
+  theme_light()+
+  labs(x="Year", y="Occupation of Guests, by year")
+
+ggplotly(graph2)
+```
+
+> In this graph, the audience would know the exact proportion of each category each year by this graph without being messy. And they also can choose to hide some lines if they only want to focus only on the occupation of one category each year.
+
+*Exercise 3.1*
+Map my bike ride using animation! Requirements: 1. Show current location with a red point. 2. Path up until the current point should be shown as well. 3. Color the line according to elevation. 4. Add something of your own!
+
+```{r, message = FALSE, warning=FALSE}
+mallorca_bike_day7 <- read_csv("https://www.dropbox.com/s/zc6jan4ltmjtvy0/mallorca_bike_day7.csv?dl=1") %>% 
+  select(1:4, speed)
+mallorca_map <- get_stamenmap(
+    bbox = c(left = 2.38, bottom = 39.55, right = 2.62, top = 39.7), 
+    maptype = "terrain",
+    zoom = 11
+)
+
+mallorca_map <- ggmap(mallorca_map)+
+  geom_point(data=mallorca_bike_day7, 
+             aes(x=lon,y=lat), color = 'red', size = 1.5)+
+   geom_line(data=mallorca_bike_day7, 
+             aes(x=lon,y=lat, color=ele), 
+             alpha=.7, size = .5) +
+  labs(x="Longitude", y="Latitude")+
+  transition_reveal(time) +
+  ggtitle("Time:{frame_along}")
+
+animate(mallorca_map)
+# anim_save("/Users/apple/Desktop/STAT112/mallorca_map.gif")
+# knitr::include_graphics("/Users/apple/Desktop/STAT112/mallorca_map.gif")
+```
+
+## Activity 12: Dynamic maps with Leaflet
+
+*Exercise 1.1* In this exercise, you are going to create a single map of some of your favorite places! And, you are going to write a brief story about the journey you take visiting them. The end result should be one map followed
+
+a. Create a data set using the tibble function that has 10-15 rows and at least three columns. The rows will be 10-15 of your favorite places, the columns will be the name of the locatin, the latitude, the longitude, and any other variable you think might be interesting to track.
+```{r}
+favorite_stp_by_CZ <- tibble(
+  place = c("Olin-Rice Hall", "Macalester College", "Doty              Residence Hall", "DeWitt Wallace Library",                 "University of Minnesota-Twin City", 
+            "Mall of America", "Shadow Falls Park", 
+            "Rice Lake", "My Burger","Twin Cities               Premium Outlets"),
+  long = c(-93.168709, -93.169044, -93.168465, 
+           -93.168018, -93.228831, -93.221236, 
+           -93.195708, -93.394174, -93.166388, -93.214818),
+  lat = c(44.936603, 44.937893, 44.940850,
+          44.938592, 44.976968, 44.862249, 
+          44.943113, 44.796548, 44.941418, 44.818780),
+  degree_of_liking = c(9,10,8,10,10,9,9,9,8,8),
+  ranking = c(3,1,5,2,4,6,4,8,9,10)
+  
+  )
+```
+
+b. Create a map that uses circles to indicate your favorite places. Label them with the name of the place. Choose the tile you like best, but explain why you chose that tile. Color your 3-5 MOST favorite places differently than the ones that are not in your top 3-5. Add a legend that explains what the colors mean.
+```{r}
+pal <- colorFactor(
+  palette = c("Red","Blue","Green"),
+  domain = favorite_stp_by_CZ$degree_of_liking
+)
+
+leaflet(data = favorite_stp_by_CZ) %>% 
+  addProviderTiles(providers$CartoDB.DarkMatter) %>%
+  addCircles(lng = ~long, lat = ~lat, label = ~place, opacity = 1, color=~pal(degree_of_liking)) %>% 
+  addLegend(pal = pal, values = ~degree_of_liking, opacity = 1)
+
+```
+
+> I like this title because the backgroud is black so that the points on the map are more clear to see.  
+> The color of three most favorite places is Green.
+
+c. Connect all your locations together with a line in a meaningful way.
+```{r}
+leaflet(data = favorite_stp_by_CZ) %>% 
+  addProviderTiles(providers$CartoDB.DarkMatter) %>%
+  addCircles(lng = ~long, lat = ~lat, label = ~place, opacity = 1, color=~pal(degree_of_liking)) %>% 
+  addLegend(pal = pal, values = ~degree_of_liking, opacity = 1) %>% 
+  addPolylines(lng = ~long, lat = ~lat, color = col2hex("white"))
+```
+
+d. If there are other variables you want to add that could enhance your plot, do that now.
+
+```{r}
+
+pal2 <- colorBin(bins = 5,
+  palette = c("RdYlBu"),
+  domain = favorite_stp_by_CZ$ranking
+)
+
+leaflet(data = favorite_stp_by_CZ) %>% 
+  addProviderTiles(providers$CartoDB.DarkMatter) %>%
+  addCircleMarkers(lng = ~long, lat = ~lat, label = ~place, opacity = 1, color=~pal2(ranking), radius = ~ifelse(ranking %in%c("1","2","3"), 8, 3)) %>%
+  addLegend(pal = pal2, values = ~ranking, opacity = 1) %>% 
+  addCircles(lng = ~long, lat = ~lat, label = ~place, opacity = 1, color=~pal(degree_of_liking)) %>% 
+  addLegend(pal = pal, values = ~degree_of_liking, opacity = 1) %>% 
+  addPolylines(lng = ~long, lat = ~lat, color = col2hex("white"))
+```
+
+> The colors of annulus of the circle show the ranking, and the colors inside the circle are the degree of liking. 
+
+
+e. Write a short paragraph describing the journey you took to get to all of your favorite places. It should correspond to the order in which your places are connected on the map.
+
+> After the class ends at the Olin-Rice, the journey will start at Macalester College. I first go back to my dorm at Doty and study for a while at the library. After that, I go to the University of Minnesota to hang out with my friends there. Then, I go to the Mall of America to shop. Then I go to the Shadow Falls Park to see Mississippi and I drive to Rice Lake to see beautiful views. Then I go to My Burger to eat. After eating, I go to Outlets where I can buy clothing at a low price;
+
+*Exercise 2.1* This exercise uses the datasets MplsStops and MplsDemo from the carData library. Search for them in Help to find out more information.
+
+a. Use the MplsStops dataset to find out how many stops there were for each neighborhood and the proportion of stops that were for a suspicious vehicle or person. Sort the results from most to least number of stops. Save this as a dataset called mpls_suspicious and display the table.
+
+```{r}
+mpls_suspicious<-MplsStops %>% 
+  group_by(neighborhood) %>% 
+  summarise(n=n(),sum_sup=sum(problem=="suspicious")) %>% 
+  mutate(prop_suspicious=sum_sup/n) %>% 
+  select(neighborhood,n,prop_suspicious) %>% 
+  arrange(desc(n))
+mpls_suspicious
+```
+
+b. Use a leaflet map and the MplsStops dataset to display each of the stops on a map as a small point. Color the points differently depending on whether they were for suspicious vehicle/person or a traffic stop (the problem variable). HINTS: use addCircleMarkers, set stroke = FAlSE, use colorFactor() to create a palette.
+```{r}
+pal3 <- colorFactor(palette = c("RdYlBu"),
+  domain =  MplsStops$problem
+)
+leaflet(data=MplsStops) %>% 
+  addTiles() %>% 
+  addCircleMarkers(lng = ~long, lat = ~lat, color = ~pal3(problem), stroke = FALSE, fillOpacity = 0.5, radius = .4) %>% 
+  addLegend(pal = pal3, values = ~problem, opacity = 1) 
+
+```
+
+c. The mpls_nbhd data read in in the R code chunk below is a shape file and contains information about the geometries of the Minneapolis neighborhoods. Using the mpls_nbhd dataset as the base file, join the mpls_suspicious and MplsDemo datasets to it by neighborhood (careful, they are named different things in the different files). Call this new dataset mpls_all. Create two maps using mpls_all: i. one that colors the neighborhoods by prop_suspicious, ii. one that colors the neighborhoods by poverty. In both maps, display the neighborhood name as you scroll over it. Does there seem to be a relationship between prop_suspicious and poverty? Is there a simple plot that might also help you investigate this?
+
+```{r, message = FALSE, warning=FALSE}
+mpls_nbhd <- st_read("/Users/apple/Desktop/STAT112/Minneapolis_Neighborhoods/Minneapolis_Neighborhoods.shp", quiet = TRUE)
+mpls_all <- mpls_nbhd %>% 
+  inner_join(MplsDemo, by = c('BDNAME'='neighborhood')) %>% 
+  inner_join(mpls_suspicious, by = c('BDNAME'='neighborhood')) 
+
+palsus <- colorNumeric("viridis", 
+                     domain = mpls_all$prop_suspicious) 
+
+map1<-leaflet(mpls_all) %>% 
+  addTiles() %>% 
+  addPolygons(
+    stroke = FALSE, 
+    fillColor = ~palsus(prop_suspicious), 
+    fillOpacity = 0.7, 
+    smoothFactor = 0.5,
+    label = ~BDNAME,
+    highlight = highlightOptions(weight = 5, 
+                                 color = "black",
+                                 fillOpacity = 0.9,
+                                 bringToFront = FALSE)) %>%
+  addLegend(pal = palsus, 
+            values = ~prop_suspicious, 
+            opacity = 0.5, 
+            title = NULL,
+            position = "bottomright") 
+map1
+
+palpov <- colorNumeric("viridis", 
+                     domain = mpls_all$poverty) 
+map2<-leaflet(mpls_all) %>% 
+  addTiles() %>% 
+  addPolygons(
+    stroke = FALSE, 
+    fillColor = ~palpov(poverty), 
+    fillOpacity = 0.7, 
+    smoothFactor = 0.5,
+    label = ~BDNAME,
+    highlight = highlightOptions(weight = 5, 
+                                 color = "black",
+                                 fillOpacity = 0.9,
+                                 bringToFront = FALSE)) %>%
+  addLegend(pal = palpov, 
+            values = ~poverty, 
+            opacity = 0.5, 
+            title = NULL,
+            position = "bottomright") 
+
+map2
+  
+```
+```{r}
+mpls_all %>% 
+  ggplot(aes(x=poverty, y=prop_suspicious)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE)
+mpls_all %>% 
+  group_by(BDNAME) %>% 
+  summarise(r = poverty/prop_suspicious)%>%
+  ggplot(aes(x=r)) +
+  geom_density()
+```
+
+> There are no obvious relation between the poverty and proportion but the most ratios between poverty and proportion of suspicious are near 0.1.
+
+d. Do your own investigation with these data. What do you learn?
+
+```{r}
+mpls_all %>% 
+  ggplot(aes(x = population, y = poverty, color = collegeGrad, size = foreignBorn))+
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+> I learned that the poverty has a lttele to do with the population of the neighborhoods in this data set. Overall, the larger the population is, the lower the poverty is. And it seems that the most neighhoods which have highe fraction with a college degree have a small population. And it seems that there is no relation between the fraction of the population estimated to be foreign born and the population. 
+
+

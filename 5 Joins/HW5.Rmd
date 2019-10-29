@@ -1,0 +1,264 @@
+---
+title: "HW5"
+author: "Charels Zhang"
+output: html_document
+---
+```{r message=FALSE}
+library(tidyverse)
+library(lubridate)
+library(ggmap)
+```
+## Activity 08 - Joins
+
+*Exercise 1.1*
+Use your wrangling skills to answer the following questions. Hint 1: start by thinking about what tables you might need to join (if any) and identifying the corresponding variables to match. Hint 2: you will need an extra table to convert grades to grade point averages. I have given you the code below.
+
+a. How many student enrollments in each department?
+```{r message=FALSE}
+Grades <- read_csv("http://www.macalester.edu/~dshuman1/data/112/grades.csv") %>%
+  distinct(sid,sessionID,.keep_all = TRUE) 
+Courses <- read_csv("http://www.macalester.edu/~dshuman1/data/112/courses.csv")
+
+Courses %>% 
+  group_by(dept) %>% 
+  summarize(sum(enroll))
+```
+
+b. What is the grade-point average (GPA) for each student? The average student GPA? Hint: There are some “S” and “AU” grades that we want to exclude from GPA calculations. What is the correct variant of join to accomplish this?
+```{r}
+GPAConversion <- tibble(grade=c("A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-","NC"),
+                        gpa=c(4.3,4,3.7,3.3,3,2.7,2.3,2,1.7,1.3,1,0.7,0))
+
+Grades %>% 
+  left_join(GPAConversion, by="grade") %>% 
+  filter(grade!="S", grade!="AU") %>%
+  group_by(sid) %>% 
+  summarize(sum(gpa)/n())
+```
+
+
+c. What fraction of grades are below B+?
+```{r}
+
+Grades %>% 
+  inner_join(GPAConversion, by="grade") %>% 
+  mutate(gpabb=gpa<3.3) %>% 
+  summarize(avgpa=mean(gpabb))
+
+
+```
+
+> The fraction of grades that are below B+ is 0.2834776
+
+d. What is the grade-point average for each instructor?
+
+```{r}
+Grades %>% 
+  inner_join(GPAConversion, by="grade") %>% 
+  inner_join(Courses, by="sessionID") %>% 
+  group_by(iid) %>% 
+  summarise(gpa_iid=sum(gpa)/n()) %>% 
+  filter(gpa_iid!="NA")
+
+```
+
+e. We cannot actually compute the correct grade-point average for each department from the information we have. The reason why is due to cross-listed courses. Students for those courses could be enrolled under either department, and we do not know which department to asign the grade to. There are a number of possible workarounds to get an estimate. One would be to assign all grades in a section to the department of the instructor, which we would have to infer from the data. Instead, start by creating a table with all cross-listed courses. Then use an anti_join to eliminate all cross-listed courses. Finally, use an inner_join to compute the grade-point average for each department.
+
+```{r}
+
+clc<-Courses %>% 
+  count(sessionID) %>% 
+  filter(n>1) 
+
+Grades %>% 
+  inner_join(Courses, by="sessionID") %>%
+  anti_join(clc, by="sessionID") %>% 
+  inner_join(GPAConversion, by="grade") %>% 
+  group_by(dept) %>% 
+  summarize(gpa=mean(gpa))
+
+```
+
+
+*Exercise 2.1 (Warm-up: temporal patterns)*
+Make the following plots and interpret them:
+
+a. A density plot of the events versus sdate. Use ggplot() and geom_density().
+
+```{r}
+data_site <- 
+  "https://www.macalester.edu/~dshuman1/data/112/2014-Q4-Trips-History-Data-Small.rds" 
+Trips <- readRDS(gzcon(url(data_site)))
+Stations<-read_csv("http://www.macalester.edu/~dshuman1/data/112/DC-Stations.csv")
+
+Trips %>% 
+  ggplot(aes(x=sdate)) +
+  geom_density()
+```
+
+b. A density plot of the events versus time of day. You can use mutate with lubridates hour()andminute()functions to extract the hour of the day and minute within the hour fromsdate`. Hint: A minute is 1/60 of an hour, so create a variable where 3:30 is 3.5 and 3:45 is 3.75.
+
+```{r}
+
+Trips %>% 
+  mutate(hr=hour(sdate), min=minute(sdate), time=hr+min/60) %>% 
+  ggplot(aes(x=time))+
+  geom_density()
+  
+```
+c. A bar graph of the events versus day of the week. Use coord_flip to flip the coordinates so day is on the y-axis.
+
+```{r}
+Trips %>% 
+  mutate(day=wday(sdate)) %>% 
+  ggplot(aes(x=day))+
+  geom_bar()+
+  coord_flip()
+
+```
+
+d. Facet your graph from (b) by day of the week. Is there a pattern?
+The variable client describes whether the renter is a regular user (level Registered) or has not joined the bike-rental organization (Causal). Do you think these two different categories of users show different rental behavior? How might it interact with the patterns you found in Exercise 2.1?
+
+```{r}
+Trips %>% 
+  mutate(hr=hour(sdate), min=minute(sdate), day=wday(sdate), time=hr+min/60, ) %>% 
+  ggplot(aes(x=time))+
+  geom_density() +
+  facet_wrap(vars(day))
+```
+> Yes, there is a pattern on the weekdays, which has higher densities in the morning and the afternoon while lower at noon and night, and there is a pattern on the weekends, whcih increases the density from the moring and decreases from the afternoon. 
+
+> Yes I think these two different categories of users show different rental behavior. I think for renters, they may has more demand for bikes at noon than regular clients. 
+
+*Exercise 2.2 (Customer segmentation)* Repeat the graphic from Exercise 2.1 (d) with the following changes:
+
+a. Set the fill aesthetic for geom_density() to the client variable. You may also want to set the alpha for transparency and color=NA to suppress the outline of the density function.
+
+```{r}
+Trips %>% 
+  mutate(day=wday(sdate, label=TRUE), time=hour(sdate)+minute(sdate)/60) %>% 
+  ggplot(aes(x=time, fill=client))+
+  geom_density(alpha=0.3, color=NA) +
+  facet_wrap(vars(day))
+  
+```
+
+b. Now add the argument position = position_stack() to geom_density(). In your opinion, is this better or worse in terms of telling a story? What are the advantages/disadvantages of each?
+```{r}
+Trips %>% 
+  mutate(time=hour(sdate)+minute(sdate)/60,day=wday(sdate, label=TRUE)) %>% 
+  ggplot(aes(x=time, fill=client))+
+  geom_density(alpha=0.3, color=NA, position = position_stack()) +
+  facet_wrap(vars(day))
+```
+> I think this figure is better. Advantage: people can know the overall patterns between both casual and registered clients and the density.  Disadvantage: this figure can't tell the difference of patterns between the casual and registered clients. 
+
+c. Rather than faceting on day of the week, create a new faceting variable like this: mutate(wday = ifelse(wday(sdate) %in% c(1,7), "weekend", "weekday")). What does the variable wday represent? Try to understand the code.
+
+```{r}
+Trips %>% 
+  mutate(time=hour(sdate)+minute(sdate)/60,
+         day=wday(sdate, label=TRUE)) %>% 
+  mutate(wday = ifelse(wday(sdate) %in% c(1,7), "weekend", "weekday")) %>% 
+  ggplot(aes(x=time))+
+  geom_density(alpha=0.3, color=NA,aes(fill=client)) +
+  facet_wrap(vars(wday))
+```
+> wady represents whether it's a weekday or weekend.
+
+
+d. Is it better to facet on wday and fill with client, or vice versa?
+```{r}
+Trips %>% 
+  mutate(time=hour(sdate)+minute(sdate)/60,
+         day=wday(sdate, label=TRUE)) %>% 
+  mutate(wday = ifelse(wday(sdate) %in% c(1,7), "weekend", "weekday")) %>% 
+  ggplot(aes(x=time))+
+  geom_density(alpha=0.3, color=NA, aes(fill=wday)) +
+  facet_wrap(vars(client))
+```
+
+> It's better to facet on wady and fill with client because finding the differences or similarities of Casual and registered clients makes more sense in this case, and this figure show the patterns of the use time of two kinds of clients on the weekday and weekend. 
+
+e. Of all of the graphics you created so far, which is most effective at telling an interesting story?
+
+> The graph from b is most effective at telling an interesting story because it shows the how casual cliends demand more bikes than registered clients, and it also shows the different pattern between the weekdays and weekends.
+
+
+*Exercise 2.3 (Visualization of bicycle departures by station)* Use the latitude and longitude variables in Stations to make a visualization of the total number of departures from each station in the Trips data.
+
+```{r}
+DC <- get_stamenmap(
+    bbox = c(left = -77.4665, bottom = 38.7034, right =-76.5533, top = 39.1543), 
+    maptype = "terrain",
+    zoom = 11
+)
+
+ST<-
+  Trips %>% 
+  left_join(Stations, by=c("sstation"="name")) %>% 
+  group_by(sstation) %>% 
+  mutate(n=n())
+  
+ggmap(DC) +
+  geom_point(data=ST, 
+             aes(x=long,y=lat, color=n), 
+             alpha=1) 
+
+```
+
+*Exercise 2.4* Only 14.4% of the trips in our data are carried out by casual users. Create a map that shows which area(s) of the city have stations with a much higher percentage of departures by casual users. Interpret your map.
+
+```{r}
+casual <- ST %>% 
+  group_by(long, lat) %>% 
+  summarise(prop=sum(client=="Casual")/n())
+
+ggmap(DC) +
+  geom_point(data=casual, 
+             aes(x=long,y=lat, color=prop), 
+             alpha=1) 
+```
+> Casual users are everywhere, both in the city and the suburban, for commuters and travellers, but overall there are more use in the center of DC, probably because most of clients are registered clients who commute everyday. 
+
+*Exercise 2.5 (High traffic points)*
+
+a. Make a table with the ten station-date combinations (e.g., 14th & V St., 2014-10-14) with the highest number of departures, sorted from most departures to fewest. Hint: as_date(sdate) converts sdate from date-time format to date format.
+
+```{r}
+Topten <-
+Trips %>% 
+  mutate(Date=as_date(sdate)) %>% 
+  group_by(sstation, Date) %>% 
+  summarize(Total_Trips=n()) %>% 
+  arrange(desc(Total_Trips)) %>% 
+  head(10)
+
+Topten
+```
+
+b. Use a join operation to make a table with only those trips whose departures match those top ten station-date combinations from part (a).
+
+```{r}
+Trip2 <-
+Trips %>% 
+  mutate(Date=as_date(sdate)) %>% 
+  semi_join(Topten, by=c("sstation", "Date"))
+Trip2
+```
+
+c. Group the trips you filtered out in part (b) by client type and wday (weekend/weekday), and count the total number of trips in each of the four groups. Interpret your results.
+
+```{r}
+Trip2 %>% 
+  mutate(wday = ifelse(wday(Date) %in% c(1,7), "weekend", "weekday")) %>% 
+  group_by(client, wday) %>% 
+  count()
+```
+
+> Casual clients use more bikes on the weekends for traveling whereas registered clients use more on the weekday for commute.
+
+
+
+

@@ -1,0 +1,49 @@
+---
+title: "My R Markdown document!"
+author: "Charles Zhang"
+output:
+  html_document:
+    df_print: paged
+---
+
+First, if you just downloaded this file from the moodle page, make sure to save it (File -> Save As ...) in the folder you created for this class (NOT in the downloads folder!!!). Use the R Markdown Reference Guide to help you (Help -> Cheatsheets -> R Markdown Reference Guide). Try knitting your document to HTML before making any changes. Then, be sure to knit to HTML after any changes you make so you can more easily find your mistakes.
+
+
+**EXERCISES**
+
+(@) At the top of the document, where it says "PUT YOUR NAME HERE", do that. Keep it inside the quotes.
+
+(@) Write the name of your hometown in bold below, next to where it says "Hometown:".
+
+Hometown: **Shandong, China**
+
+(@) Write the name of the person sitting next to you in italics below.
+
+*Joe*
+
+(@) Provide a link to your favorite restaurant, but make the words "My favorite restaurant" be the link you click on in the document. I have started this for you below, but you'll have to make some changes to make it work.
+
+[My favorite restaurant](https://www.pizzahut.com/?ds_rl=1149043&gclid=EAIaIQobChMIgrX_6Ja65AIVCdbACh28HwosEAAYASAAEgIqfPD_BwE&gclsrc=aw.ds)
+
+
+(@) Find a picture of Macalester on the internet and include the picture below. Make sure to provide the link to the actual picture.
+
+![](https://blog.collegevine.com/wp-content/uploads/2019/04/nativelandscape__1513118659132__w1500-2-1024x576.jpg)
+
+(@) Create a header titled, "What I want to learn in this class" and make a bulleted list of at least two things you'd like to learn. Bulleted lists are annoyingly tricky. Spacing is important.
+
+# What I want to learn in this class
+* How to process data
+* How to use the computer languages to realize the visualization of data
+
+(@) Insert an R code chunk. Within the chunk, do some simple math, using addition, subtraction, multiplication, or division. Below the code, explain what your chunk of code did in a sentence. I know this is simple, but it's to emphasize that you always need to explain any code and output included in an assignment.
+
+```{R}
+1+2
+```
+The code did an addition of one and two.
+
+Knit your document to html. Either click on the icon above that looks like a ball of yarn with knitting needles in it, or click the arrow next to that and choose knit to html. Does everything look as you suspected? If not, try to figure out why and fix it. When you knit the document, an html file with the same name as the .rmd file (but wiht an html extension) is saved to wherever the .rmd file was saved, which is the folder you created, right? NOT the downloads folder!?
+
+
+
