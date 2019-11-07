@@ -1,0 +1,118 @@
+---
+title: "ideas"
+author: "Charles Zhang, Roan Floer-Martinez, Jinghan Zhou, Xi Feng"
+output: 
+  html_document:
+    keep_md: yes
+---
+```{r message=FALSE}
+library(readr)
+library(tidyverse)
+library(lubridate)
+library(skimr) 
+library(naniar) 
+library(ggmap)
+library(gplots) 
+library(RColorBrewer) 
+library(sf) 
+library(leaflet)
+library(formattable)
+```
+
+## Dataset 1: nyc_squirrels 
+
+> **Dataset**:
+
+```{r message=FALSE}
+nyc_squirrels <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-29/nyc_squirrels.csv")
+```
+
+> **Ideas:** we could find out the squirals habits like runnig, chasing, eating, e.t.c., and we can also find the specific differences among different specific locations in NYC.  
+
+> **Graph and Table**
+
+```{r message=FALSE}
+dates<-nyc_squirrels %>% 
+  group_by(date) %>% 
+  summarise(num = n())
+```
+
+> This table shows the number of squirrels recorded in days in October, 2018
+
+```{r message=FALSE}
+formattable(dates,align =c("c", "c"), list(`Indicator Name` = formatter("span", style =~style(color = "black",font.weight = "bold"))))
+```
+
+```{r message=FALSE}
+temp <- nyc_squirrels %>% 
+  select(lat, long, eating) %>% 
+  group_by(lat, long) %>% 
+  summarise(eating = sum(eating))
+
+temp[temp==0] <- NA
+eating_squirrels<-temp %>% 
+  drop_na() 
+
+paleating <- colorFactor(c("Red"), 
+                     domain = eating_squirrels$eating) 
+
+eating_map <- leaflet(eating_squirrels) %>% 
+  addProviderTiles(providers$CartoDB.DarkMatter) %>%
+  addCircleMarkers(lng = ~long, lat = ~lat, color = ~paleating(eating), stroke = FALSE, fillOpacity = 0.5, radius = 1.4) %>% 
+  addLegend(pal = paleating, 
+            values = ~eating, 
+            opacity = 0.5, 
+            title = NULL,
+            position = "bottomright") 
+```
+
+> This map shows all places that squirals have eaten at on some days in October, 2018.
+
+```{r}
+eating_map
+```
+
+## Dataset 2: Video Games
+> *Data:* 
+https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-07-30
+This dataset seems pretty interesting and straightforward
+
+```{r message=FALSE}
+library(readr)
+video_games <- read_csv("~/Desktop/Compsci-final/ideas/video_games.csv")
+
+video_games[video_games==0] <- NA
+vg_clean<-video_games %>% 
+  drop_na() 
+```
+
+> **Ideas:**
+find out the popularity/trend of Video games and compare the different video games companies by those variables in the data.
+
+> **Graphs/Tables:**
+
+```{r message=FALSE}
+vg_clean %>% 
+  ggplot(aes(x = price))+
+  geom_density() +
+  theme_classic()
+
+top_20_avrplaytime_game <- vg_clean %>% 
+  select(game, average_playtime, price, owners) %>% 
+  arrange(desc(average_playtime)) %>% 
+  head(20)
+
+top_20_avrplaytime_game %>% 
+  ggplot(aes(x=price, y=average_playtime,label=game, color = owners))+
+  geom_point()+
+  geom_text(family="STKaiti")+
+  theme_classic()
+```
+
+> This graph shows the relation between pices of games, average play times of games, and the number of owners of games with top 20 average playtime
+
+
+
+
+
+
