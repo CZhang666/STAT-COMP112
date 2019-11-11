@@ -5,7 +5,8 @@ output:
   html_document:
     keep_md: yes
 ---
-```{r setup, warning=FALSE, message=FALSE}
+
+```r
 library(esquisse)
 library(tidyverse)
 library(fivethirtyeight)
@@ -27,31 +28,61 @@ a. What are the *cases* in this data set?
 
 b. Find the number of cases in `hiphop_cand_lyrics` 
 
-```{R}
+
+```r
 nrow(hiphop_cand_lyrics)
 ```
 
+```
+## [1] 377
+```
+
 c. List the names of all variables in `hiphop_cand_lyrics`
-```{R}
+
+```r
 colnames(hiphop_cand_lyrics)
+```
+
+```
+## [1] "candidate"          "song"               "artist"            
+## [4] "sentiment"          "theme"              "album_release_date"
+## [7] "line"               "url"
 ```
 
 **Exercise 4.2**
 Let's start our investigation of hip hop data by asking "Who?"; that is, let's identify patterns in which 2016 presidential candidates popped up in hip hop lyrics.
   a. Construct a table of the number of cases that fall into each `candidate` category.    
-```{R}
+
+```r
 hiphop_cand_lyrics %>% 
   count(candidate)
+```
+
+```
+## # A tibble: 8 x 2
+##   candidate           n
+##   <chr>           <int>
+## 1 Ben Carson          1
+## 2 Bernie Sanders      2
+## 3 Chris Christie      2
+## 4 Donald Trump      268
+## 5 Hillary Clinton    92
+## 6 Jeb Bush            9
+## 7 Mike Huckabee       2
+## 8 Ted Cruz            1
 ```
   
   b. Construct a single plot that allows you to investigate the prevalence of each candidate in hip hop.  Make the following modifications:    
     - change the axis labels    
     - change the fill colors
-```{R}
+
+```r
 ggplot(data = hiphop_cand_lyrics, aes(x=candidate)) + 
   geom_bar(fill = 'purple')+
   labs(x="Name of Candidate", y="Number of hip-hop songs referencing")
 ```
+
+![](HW2_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
   
   c. Summarize your findings about the 2016 candidates in hip hop.
 
@@ -64,19 +95,25 @@ Next, consider the release dates of the hip hop songs.
   a. Construct a histogram of the release dates with the following modifications:   
     - change the fill color of the bins    
     - change the bin width to a meaningful size    
-```{R}
+
+```r
   ggplot(hiphop_cand_lyrics, aes(x=album_release_date)) +
         geom_histogram(fill="purple", binwidth=1) +
         labs(x="Year", y="Number of Albums")
 ```
+
+![](HW2_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
  
   b. Construct a density plot of the release dates with the following modifications:
     - change the fill color    
-```{R}
+
+```r
 ggplot(hiphop_cand_lyrics, aes(x=album_release_date)) +
         geom_density(fill="purple") +
         labs(x="Year")
 ```
+
+![](HW2_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
   
   c. Summarize your findings about release date
 
@@ -90,13 +127,15 @@ No class will teach you everything you need to know about RStudio or programming
   - Add a title or caption.    
   - Add *transparency* to the fill color.    
   - Calculate the mean (ie. average) release date and median release date:
-```{r eval=FALSE}
+
+```r
   mean(hiphop_cand_lyrics$album_release_date)
   median(hiphop_cand_lyrics$album_release_date)
-```    
+```
 Add two vertical lines to your plot: one representing the mean and the other representing the median. Use two different colors and/or line types.   
 
-```{R}
+
+```r
 ggplot(hiphop_cand_lyrics, aes(x=album_release_date)) +
         geom_density(fill="purple", mapping = aes(alpha="midsize")) +
         labs(x="Year")+
@@ -106,6 +145,12 @@ ggplot(hiphop_cand_lyrics, aes(x=album_release_date)) +
         geom_vline(xintercept=median(hiphop_cand_lyrics$album_release_date), color='purple')
 ```
 
+```
+## Warning: Using alpha for a discrete variable is not advised.
+```
+
+![](HW2_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
 # Activity 03: Bivariate Visualization
 
 ## 6 Practice
@@ -113,28 +158,35 @@ ggplot(hiphop_cand_lyrics, aes(x=album_release_date)) +
 
 In the annual Nathan's hot dog eating contest, people compete to eat as many hot dogs as possible in ten minutes.  Data on past competitions were compiled by Nathan Yau for "Visualize This: The FlowingData Guide to Design, Visualization, and Statistics": 
 
-```{r, message=FALSE}
+
+```r
 hotdogs <- read_csv("http://datasets.flowingdata.com/hot-dog-contest-winners.csv")
-```   
+```
 
 **Exercise 6.1**
 
 a. Construct a visualization of the winning number of hot dogs by year. THINK: Which is the response variable?      
 
 response variable: 'Dogs eaten'
-```{R}
+
+```r
 ggplot(hotdogs, aes(x=Year, y=`Dogs eaten`)) +
       geom_point()
-```      
+```
+
+![](HW2_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
 
 b. Temporal trends are often visualized using a line plot.  Add a `geom_line()` layer to your plot from part (a).       
 
-```{R}
+
+```r
 ggplot(hotdogs, aes(x=Year, y=`Dogs eaten`)) +
       geom_point() +
       geom_line()
 ```
+
+![](HW2_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
 c. Summarize your observations about the temporal trends in the hot dog contest. 
 
@@ -147,37 +199,63 @@ c. Summarize your observations about the temporal trends in the hot dog contest.
 All but two of the past winners are from the U.S. or Japan:
 
 
-```{r}
+
+```r
 hotdogs %>% 
   count(Country)
-```    
+```
+
+```
+## # A tibble: 4 x 2
+##   Country           n
+##   <chr>         <int>
+## 1 Germany           1
+## 2 Japan             9
+## 3 Mexico            1
+## 4 United States    20
+```
 
 Use the following code to *filter* out just the winners from U.S. and Japan and name this `hotdogsSub`.  (Don't worry about the code itself - we'll discuss similar syntax later in the semester!)    
 
-```{r}
+
+```r
 hotdogsSub <- hotdogs %>% 
     filter(Country %in% c("Japan","United States"))
-```    
+```
 
 a. Using a density plot approach *without* facets, construct a visualization of how the number of hot dogs eaten varies by country.
-```{R}
+
+```r
 ggplot(hotdogsSub, aes(x=`Dogs eaten`, fill=Country)) +
     geom_density()
 ```
 
+![](HW2_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+
 b. Repeat part a using a density plot approach *with* facets. 
-```{R}
+
+```r
 ggplot(hotdogsSub, aes(x=`Dogs eaten`, fill=Country))+
     geom_density()+
     facet_wrap(~Country)
 ```
 
+![](HW2_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+
 c. Repeat part a using *something other than* a density plot approach.  (There are a few options!)    
-```{R}
+
+```r
 ggplot(hotdogsSub, aes(x=`Dogs eaten`, fill=Country))+
     geom_bar(binwidth=4) +
     facet_wrap(~Country)
 ```
+
+```
+## Warning: `geom_bar()` no longer has a `binwidth` parameter. Please use
+## `geom_histogram()` instead.
+```
+
+![](HW2_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
 
 d. Summarize your observations about the number of hot dogs eaten by country.   
 
@@ -198,13 +276,15 @@ Recall the "Bechdel test" data from the previous activity.  As a reminder, the â
 
 In the fivethirtyeight.com article ["The Dollar-And-Cents Case Against Hollywood's Exclusion of Women"](http://fivethirtyeight.com/features/the-dollar-and-cents-case-against-hollywoods-exclusion-of-women/), the authors analyze which Hollywood movies do/don't pass the test.  Their data are available in the `fivethirtyeight` package:    
 
-```{r}
+
+```r
 data(bechdel)
 ```
     
 In investigating budgets and profits, the authors "focus on films released from 1990 to 2013, since the data has significantly more depth since then."  Use the following code to filter out just the movies in these years and name the resulting data set `Beyond1990` (don't worry about the syntax):    
 
-```{r}
+
+```r
 Beyond1990 <- bechdel %>% 
     filter(year >= 1990)
 ```
@@ -212,7 +292,8 @@ Beyond1990 <- bechdel %>%
 **Exercise 6.3**
 
 a. Construct a visualization that addresses the following research question: Do bigger budgets (`budget_2013`) pay off with greater box office returns (`domgross_2013`)?  In constructing this visualization, add a smooth to highlight trends and pay attention to which of these variables is the response.       
-```{R}
+
+```r
 Beyond1990 %>% 
   drop_na(budget_2013, domgross_2013) %>% 
   ggplot(aes(x=`budget_2013`, y=`domgross_2013`))+
@@ -220,16 +301,21 @@ Beyond1990 %>%
     geom_smooth(method = 'gam', formula=y ~ s(x, bs = "cs"))
 ```
 
+![](HW2_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
+
 b. Using your visualization as supporting evidence, answer the research question.  
 
 - Overall, it turns out the higher the budget of a movie, the higher the higher domestic gross. Therefore it can be concluded that "bigger budgets pay off with greater box office returns".
 
 c. Part of the fivethirtyeight article focuses on how budgets (`budget_2013`) differ among movies with different degrees of female character development (`clean_test`).  Construct a visualization that highlights the relationship between these two variables.  There are many options - some are better than others!       
-```{R}
+
+```r
 ggplot(Beyond1990, aes(x=`budget_2013`, y=clean_test, fill=clean_test))+
   geom_density_ridges(scale = 2, bandwidth=15700000) +
   scale_fill_manual(values=c("blue","purple","red", "green","yellow"))
 ```
+
+![](HW2_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
 
 d. Using your visualization as supporting evidence, address fivethirtyeight's concerns. 
 
@@ -247,7 +333,8 @@ a. Summarize the trends captured by this plot.  (How has the representation of w
 
 b. Recreate this plot!  To do so, you'll need to create a new data set named `newbechdel` in which the order of the Bechdel categories (`clean_test`) and the year categories (`yearCat`) match those used by fivethirtyeight.  Don't worry about the syntax:  
   
-```{r}
+
+```r
 newbechdel <- bechdel %>% 
   mutate(clean_test=factor(clean_test, c("nowomen","notalk","men","dubious","ok"))) %>% 
   mutate(yearCat=cut(year, breaks=seq(1969,2014,by=5)))
@@ -255,8 +342,9 @@ newbechdel <- bechdel %>%
 ggplot(newbechdel, aes(x=yearCat,fill=clean_test))+
   geom_bar(position="fill") +
   scale_fill_manual(values = c("red","salmon","pink","steelblue1","steelblue4"))
-  
-```    
+```
+
+![](HW2_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
    
     Further, you'll need to add the following layer in order to get a color scheme that's close to that in the article:    
 
@@ -266,6 +354,4 @@ scale_fill_manual(values = c("red","salmon","pink","steelblue1","steelblue4"))
     
 NOTE that your plot won't look *exactly* like the authors', but should be close to this:    
     
-```{r, out.width = "800px",echo=FALSE}
-knitr::include_graphics("https://www.macalester.edu/~dshuman1/data/112/bechdel_hist.jpeg")
-```
+<img src="https://www.macalester.edu/~dshuman1/data/112/bechdel_hist.jpeg" width="800px" />
