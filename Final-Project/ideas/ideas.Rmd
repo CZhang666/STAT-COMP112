@@ -53,12 +53,12 @@ temp[temp==0] <- NA
 eating_squirrels<-temp %>% 
   drop_na() 
 
-paleating <- colorFactor(c("Red"), 
+paleating <- colorFactor(c("Purple"), 
                      domain = eating_squirrels$eating) 
 
 eating_map <- leaflet(eating_squirrels) %>% 
-  addProviderTiles(providers$CartoDB.DarkMatter) %>%
-  addCircleMarkers(lng = ~long, lat = ~lat, color = ~paleating(eating), stroke = FALSE, fillOpacity = 0.5, radius = 1.4) %>% 
+  addProviderTiles(providers$Stamen.Toner) %>% 
+  addCircleMarkers(lng = ~long, lat = ~lat, color = ~paleating(eating), stroke = FALSE, fillOpacity = 0.7, radius = 2) %>% 
   addLegend(pal = paleating, 
             values = ~eating, 
             opacity = 0.5, 
@@ -110,6 +110,45 @@ top_20_avrplaytime_game %>%
 ```
 
 > This graph shows the relation between pices of games, average play times of games, and the number of owners of games with top 20 average playtime
+
+
+## Dataset 3: Pizza Party
+
+> **Data:**
+
+```{r message=FALSE}
+pizza_jared <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_jared.csv")
+pizza_barstool <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_barstool.csv")
+pizza_datafiniti <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_datafiniti.csv")
+```
+
+> **Graphs/Tables**
+
+> Pizza in the U.S.
+
+```{r message=FALSE, warning=FALSE}
+leaflet(data=pizza_datafiniti) %>% 
+  addProviderTiles(providers$Esri.NatGeoWorldMap) %>% 
+  addCircleMarkers(lng = ~longitude, lat = ~latitude, color = "red", label=~name,stroke = FALSE, fillOpacity = 0.5, radius = 2)
+```
+
+```{r message=FALSE, warning=FALSE}
+mn_pizza <- pizza_datafiniti %>% 
+  filter(province == "MN")
+```
+
+> Pizza in the Minnesota
+
+```{r message=FALSE, warning=FALSE}
+
+palmn <- colorFactor(topo.colors(5), 
+                     domain = mn_pizza$price_range_max) 
+
+leaflet(data=mn_pizza) %>% 
+  addProviderTiles(providers$Stamen.Toner) %>% 
+  addMarkers(lng = ~longitude, lat = ~latitude, label = ~name,clusterOptions = markerClusterOptions())
+
+```
 
 
 
