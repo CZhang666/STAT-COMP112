@@ -3,7 +3,7 @@ title: "Quiz 2"
 author: "Charles Zhang"
 output: 
   html_document:
-    df_print: paged
+    keep_md: yes
 ---
 
 ```{r setup, include=FALSE}

@@ -1,7 +1,9 @@
 ---
 title: "Data Science Quiz 1"
 author: "Charles Zhang"
-output: html_document
+output: 
+  html_document:
+    keep_md: yes
 ---
 
 ```{r setup, include=FALSE}
