@@ -38,8 +38,13 @@ Hometown: **Shandong, China**
 
 (@) Insert an R code chunk. Within the chunk, do some simple math, using addition, subtraction, multiplication, or division. Below the code, explain what your chunk of code did in a sentence. I know this is simple, but it's to emphasize that you always need to explain any code and output included in an assignment.
 
-```{R}
+
+```r
 1+2
+```
+
+```
+## [1] 3
 ```
 The code did an addition of one and two.
 
