@@ -11,6 +11,7 @@ output:
 library(tidyverse)
 library(rvest) 
 library(robotstxt) 
+library(formattable)
 ```
 
 **Exercise 1.1** Find the correct selectors for the following fields. Make sure that each matches 762 results:
@@ -26,10 +27,106 @@ library(robotstxt)
 9. Description
 Then, put all this information into one data frame. Do not include any extraneous information like “Instructor:”.
 
+```{r}
+fall2017 <- read_html("https://www.macalester.edu/registrar/schedules/2017fall/class-schedule/#crs10008")
+
+course_nums <- 
+  fall2017 %>%
+  html_nodes(".class-schedule-course-number") %>%
+  html_text()
+
+course_names <- 
+  fall2017 %>%
+  html_nodes(".class-schedule-course-title") %>%
+  html_text()
+
+course_days <- fall2017 %>%
+  html_nodes("td.class-schedule-label:nth-child(3)") %>% 
+  html_text() %>% 
+  str_sub(start = 7)
+  
+course_time <- fall2017 %>% 
+  html_nodes("td.class-schedule-label:nth-child(4)") %>%
+  html_text() %>% 
+  str_sub(start = 7)
+  
+course_room <- fall2017 %>% 
+  html_nodes("td.class-schedule-label:nth-child(5)") %>%
+  html_text() %>% 
+  str_sub(start = 7)
+  
+course_instructor <- fall2017 %>% 
+  html_nodes("td.class-schedule-label:nth-child(6)") %>%
+  html_text() %>% 
+  str_sub(start = 13)
+
+course_av <- fall2017 %>% 
+  html_nodes("td.class-schedule-label:nth-child(7)") %>%
+  html_text() %>% 
+  str_sub(start = 14)
+
+course_ger <- fall2017 %>% 
+  html_nodes("div.expandable p:nth-child(2)") %>%
+  html_text() %>% 
+  str_sub(start = 61)
+
+  
+course_descriptios <- fall2017 %>% 
+  html_nodes("div.expandable p:nth-child(1)") %>%
+  html_text() %>% 
+  str_sub(start = 30)
+
+  
+```
+```{r}
+course_df <- tibble(number=course_nums, name=course_names, day=course_days, time=course_time, room=course_room, instructor=course_instructor, avil_max=course_av, general_education_requirement=course_ger, description=course_descriptios)
+
+course_df
+```
+
+> First six rows of the data frame
+
+```{r}
+formattable(head(course_df),align =c("c", "c"), list(`Indicator Name` = formatter("span", style =~style(color = "black",font.weight = "bold"))))
+```
+
 **Exercise 1.2** Create a chart that shows the number of sections offered per department. Hint: The department is a substring of the course number. Yes, COMP and MATH are the same department, but for this exercise you can just show the results by four letter department code, e.g., with COMP and MATH separate.
+
+```{r}
+course_dept <- course_nums %>%  
+  str_sub(end = 4)
+t <- tibble(department=course_dept,number=course_nums)
+
+course_df %>%
+  inner_join(t, by="number") %>% 
+  group_by(department) %>% 
+  summarise(n = n()) 
+
+```
+
+> Question: how to deal with PE?
 
 **Exercise 1.3** Analyze the typical length of course names by department. To do so, create a dplyr pipeline that creates a new data table based on your courses data table, with the following changes:
 
 1. New columns for the length of the title of a course and the length of the description of the course. Hint: str_length.
 2. Remove departments that have fewer than 10 sections of courses. To do so, group by department, then remove observations in groups with fewer than 10 sections (Hint: use filter with n()). Then ungroup the data.
 3. Create a visualization of the differences across groups in lengths of course names or course descriptions. Think carefully about the visualization you should be using!
+
+```{r}
+course_analysis <- course_df %>% 
+  mutate(title_len = str_length(name), des_len = str_length(description)) %>% 
+  inner_join(t, by="number") %>% 
+  group_by(department) %>% 
+  filter(n()<10) %>% 
+  ungroup() %>% 
+  ggplot(aes(x=title_len, y=des_len))+
+  geom_point()
+
+course_analysis
+```
+
+
+
+
+
+
