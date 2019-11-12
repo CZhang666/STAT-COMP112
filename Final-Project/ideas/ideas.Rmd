@@ -81,7 +81,6 @@ This dataset seems pretty interesting and straightforward
 library(readr)
 video_games <- read_csv("~/Desktop/Compsci-final/ideas/video_games.csv")
 
-video_games[video_games==0] <- NA
 vg_clean<-video_games %>% 
   drop_na() 
 ```
@@ -133,8 +132,8 @@ leaflet(data=pizza_datafiniti) %>%
 ```
 
 ```{r message=FALSE, warning=FALSE}
-mn_pizza <- pizza_datafiniti %>% 
-  filter(province == "MN")
+  mn_pizza <- pizza_datafiniti %>% 
+    filter(province == "MN")
 ```
 
 > Pizza in the Minnesota
