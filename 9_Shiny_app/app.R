@@ -1,4 +1,3 @@
-
 library(shiny)
 library(tidyverse)
 library(readr)
@@ -32,8 +31,7 @@ server <- function(input, output) {
   })
 }
 
-
-shinyApp(ui = ui, server = server)
+shinyApp(ui, server)
 
 
 
