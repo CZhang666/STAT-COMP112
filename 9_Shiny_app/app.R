@@ -14,6 +14,7 @@ ui <- fluidPage(
   sliderInput(inputId = "year", label = "Year Published",
               min = 1950, max = 2019, value = c(1950,2019),sep = ""),
   textInput("max_players", "Max Players", value = "", placeholder = "1"),
+  selectInput("minage", "Min age", choices = board_games$min_age),
   submitButton(text = "Create my plot!"),
   plotOutput(outputId = "timeplot")
 )
@@ -21,13 +22,16 @@ ui <- fluidPage(
 server <- function(input, output) {
   output$timeplot <- renderPlot({
     board_games %>% 
-      filter(max_players == input$max_players) %>% 
-      ggplot(aes(x = year_published, y = average_rating))+
+      arrange(min_age) %>% 
+      filter(max_players == input$max_players, min_age == input$minage) %>% 
+      ggplot(aes(x = year_published, y = average_rating, color=min_playtime, label = name))+
       geom_point()+
+      geom_text()+
       scale_x_continuous(limits = input$year) +
       theme_classic()
   })
 }
+
 
 shinyApp(ui = ui, server = server)
 
