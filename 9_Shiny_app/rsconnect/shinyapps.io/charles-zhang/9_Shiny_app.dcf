@@ -5,8 +5,8 @@ account: charles-zhang
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1461562
-bundleId: 2584584
+bundleId: 2585113
 url: https://charles-zhang.shinyapps.io/9_Shiny_app/
-when: 1573600760.02275
+when: 1573618299.85065
 asMultiple: FALSE
 asStatic: FALSE
