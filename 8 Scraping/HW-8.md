@@ -205,27 +205,14 @@ t <- tibble(department=course_dept,number=course_nums)
 course_df %>%
   inner_join(t, by="number") %>% 
   group_by(department) %>% 
-  summarise(n = n()) 
+  summarise(n = n()) %>% 
+  ggplot(aes(x=department, y=n))+
+  geom_point()+
+  theme_classic()
 ```
 
-```
-## # A tibble: 41 x 2
-##    department     n
-##    <chr>      <int>
-##  1 AMST          18
-##  2 ANTH          12
-##  3 ART           20
-##  4 ASIA           9
-##  5 BIOL          34
-##  6 CHEM          34
-##  7 CHIN          16
-##  8 CLAS          21
-##  9 COMP          29
-## 10 ECON          28
-## # … with 31 more rows
-```
+![](HW-8_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
-> Question: how to deal with PE?
 
 **Exercise 1.3** Analyze the typical length of course names by department. To do so, create a dplyr pipeline that creates a new data table based on your courses data table, with the following changes:
 
@@ -236,15 +223,16 @@ course_df %>%
 
 ```r
 course_analysis <- course_df %>% 
-  mutate(title_len = str_length(name), des_len = str_length(description)) %>% 
+  mutate(title_len = str_length(name)) %>% 
   inner_join(t, by="number") %>% 
   group_by(department) %>% 
   filter(n()<10) %>% 
-  ungroup() %>% 
-  ggplot(aes(x=title_len, y=des_len))+
-  geom_point()
+  ungroup() 
 
-course_analysis
+course_analysis%>% 
+  ggplot(aes(x=department, y=title_len))+
+  geom_boxplot()+
+  theme_classic()
 ```
 
 ![](HW-8_files/figure-html/unnamed-chunk-6-1.png)<!-- -->

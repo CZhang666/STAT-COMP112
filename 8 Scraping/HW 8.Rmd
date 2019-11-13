@@ -92,7 +92,7 @@ formattable(head(course_df),align =c("c", "c"), list(`Indicator Name` = formatte
 
 **Exercise 1.2** Create a chart that shows the number of sections offered per department. Hint: The department is a substring of the course number. Yes, COMP and MATH are the same department, but for this exercise you can just show the results by four letter department code, e.g., with COMP and MATH separate.
 
-```{r}
+```{r, fig.height = 6, fig.width = 15}
 course_dept <- course_nums %>%  
   str_sub(end = 4)
 t <- tibble(department=course_dept,number=course_nums)
@@ -100,11 +100,12 @@ t <- tibble(department=course_dept,number=course_nums)
 course_df %>%
   inner_join(t, by="number") %>% 
   group_by(department) %>% 
-  summarise(n = n()) 
-
+  summarise(n = n()) %>% 
+  ggplot(aes(x=department, y=n))+
+  geom_point()+
+  theme_classic()
 ```
 
-> Question: how to deal with PE?
 
 **Exercise 1.3** Analyze the typical length of course names by department. To do so, create a dplyr pipeline that creates a new data table based on your courses data table, with the following changes:
 
@@ -114,15 +115,16 @@ course_df %>%
 
 ```{r}
 course_analysis <- course_df %>% 
-  mutate(title_len = str_length(name), des_len = str_length(description)) %>% 
+  mutate(title_len = str_length(name)) %>% 
   inner_join(t, by="number") %>% 
   group_by(department) %>% 
   filter(n()<10) %>% 
-  ungroup() %>% 
-  ggplot(aes(x=title_len, y=des_len))+
-  geom_point()
+  ungroup() 
 
-course_analysis
+course_analysis%>% 
+  ggplot(aes(x=department, y=title_len))+
+  geom_boxplot()+
+  theme_classic()
 ```
 
 
