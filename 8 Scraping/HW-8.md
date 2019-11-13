@@ -5,6 +5,9 @@ output:
   html_document:
     keep_md: yes
 ---
+
+## Shiny APP Link: https://charles-zhang.shinyapps.io/9_Shiny_app/
+
 ## Activity A14: Introduction to Scraping
 
 
@@ -198,14 +201,12 @@ formattable(head(course_df),align =c("c", "c"), list(`Indicator Name` = formatte
 
 
 ```r
-course_dept <- course_nums %>%  
-  str_sub(end = 4)
-t <- tibble(department=course_dept,number=course_nums)
+course <- course_df %>%  
+  separate(number, into = c("department", "number", "section")) 
 
-course_df %>%
-  inner_join(t, by="number") %>% 
+course %>% 
   group_by(department) %>% 
-  summarise(n = n()) %>% 
+  summarise(n=n()) %>% 
   ggplot(aes(x=department, y=n))+
   geom_point()+
   theme_classic()
@@ -222,11 +223,10 @@ course_df %>%
 
 
 ```r
-course_analysis <- course_df %>% 
+course_analysis <- course %>% 
   mutate(title_len = str_length(name)) %>% 
-  inner_join(t, by="number") %>% 
   group_by(department) %>% 
-  filter(n()<10) %>% 
+  filter(n()>=10) %>% 
   ungroup() 
 
 course_analysis%>% 
