@@ -71,7 +71,7 @@ This dataset seems pretty interesting and straightforward
 
 ```{r message=FALSE}
 library(readr)
-video_games <- read_csv("~/Desktop/Compsci-final/ideas/video_games.csv")
+video_games <- read_csv("https://raw.githubusercontent.com/RoanFM/Compsci-final/master/Data/video_games.csv")
 
 video_games[video_games==0] <- NA
 vg_clean<-video_games %>% 
@@ -110,7 +110,7 @@ top_20_avrplaytime_game %>%
 
 ```{r message=FALSE, warning=FALSE}
 # Read Data
-pizza_jared <- readr::read_csv("https://raw.githubusercontent.com/RoanFM/Compsci-final/master/ideas/pizza_jared.csv")
+pizza_jared <- readr::read_csv("https://raw.githubusercontent.com/RoanFM/Compsci-final/master/Data/pizza_jared.csv")
 pizza_barstool <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_barstool.csv")
 pizza_datafiniti <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_datafiniti.csv")
 ```
@@ -195,8 +195,66 @@ top_ten_excerllent %>%
   theme_classic()
 ```
 
+## Dataset 4: Income vs Major
 
+```{r message=FALSE, warning=FALSE}
+# Read Data
+grads <- readr::read_csv("https://raw.githubusercontent.com/RoanFM/Compsci-final/master/Data/recent-grads.csv")
+```
+```{r}
+grads %>% 
+  mutate(Major_category=fct_reorder(Major_category,Median)) %>% 
+  ggplot(aes(Major_category, Median, fill=Major_category))+
+  geom_boxplot()+
+  coord_flip()+
+  theme_classic()+
+  theme(legend.position="none")
+```
 
+> High Income Major
 
+```{r, fig.width=10}
+grads %>%
+  arrange(desc(Median)) %>% 
+  select(Major, Major_category, Median, P25th, P75th) %>% 
+  head(20) %>% 
+  mutate(Major = fct_reorder(Major, Median)) %>% 
+  ggplot(aes(Major, Median, color=Major_category))+
+  geom_point()+
+  geom_errorbar(aes(ymin=P25th,ymax=P75th))+
+  expand_limits(y=0)+
+  coord_flip()+
+  theme_classic()
+```
 
+> Low Income Major
+
+```{r, fig.width=10}
+grads %>%
+  arrange(desc(Median)) %>% 
+  select(Major, Major_category, Median, P25th, P75th) %>% 
+  tail(20) %>% 
+  mutate(Major = fct_reorder(Major, Median)) %>% 
+  ggplot(aes(Major, Median, color=Major_category))+
+  geom_point()+
+  geom_errorbar(aes(ymin=P25th,ymax=P75th))+
+  expand_limits(y=0)+
+  coord_flip()+
+  theme_classic()
+```
+
+>Popular Majors
+
+```{r}
+grads %>% 
+  count(Major_category, wt=Total, sort=TRUE) %>% 
+  mutate(Major_category = fct_reorder(Major_category, n)) %>% 
+  ggplot(aes(Major_category,n, fill=Major_category))+
+  geom_col()+
+  coord_flip()+
+  theme_classic()+
+  theme(legend.position="none")
+```
+
+> Gender vs Major and Income
 
