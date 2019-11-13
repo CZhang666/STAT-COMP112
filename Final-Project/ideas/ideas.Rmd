@@ -4,6 +4,7 @@ author: "Charles Zhang, Roan Floer-Martinez, Jinghan Zhou, Xi Feng"
 output: 
   html_document:
     keep_md: yes
+# runtime: shiny
 ---
 ```{r message=FALSE}
 library(readr)
@@ -17,60 +18,51 @@ library(RColorBrewer)
 library(sf) 
 library(leaflet)
 library(formattable)
+library(shiny)
 ```
 
-## Dataset 1: nyc_squirrels 
+## Dataset 1: Board Games
 
-> **Dataset**:
-
-```{r message=FALSE}
-nyc_squirrels <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-29/nyc_squirrels.csv")
+```{r message=FALSE, warning=FALSE}
+board_games <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-12/board_games.csv")
 ```
-
-> **Ideas:** we could find out the squirals habits like runnig, chasing, eating, e.t.c., and we can also find the specific differences among different specific locations in NYC.  
-
-> **Graph and Table**
-
-```{r message=FALSE}
-dates<-nyc_squirrels %>% 
-  group_by(date) %>% 
-  summarise(num = n())
-```
-
-> This table shows the number of squirrels recorded in days in October, 2018
-
-```{r message=FALSE}
-formattable(dates,align =c("c", "c"), list(`Indicator Name` = formatter("span", style =~style(color = "black",font.weight = "bold"))))
-```
-
-```{r message=FALSE}
-temp <- nyc_squirrels %>% 
-  select(lat, long, eating) %>% 
-  group_by(lat, long) %>% 
-  summarise(eating = sum(eating))
-
-temp[temp==0] <- NA
-eating_squirrels<-temp %>% 
-  drop_na() 
-
-paleating <- colorFactor(c("Purple"), 
-                     domain = eating_squirrels$eating) 
-
-eating_map <- leaflet(eating_squirrels) %>% 
-  addProviderTiles(providers$Stamen.Toner) %>% 
-  addCircleMarkers(lng = ~long, lat = ~lat, color = ~paleating(eating), stroke = FALSE, fillOpacity = 0.7, radius = 2) %>% 
-  addLegend(pal = paleating, 
-            values = ~eating, 
-            opacity = 0.5, 
-            title = NULL,
-            position = "bottomright") 
-```
-
-> This map shows all places that squirals have eaten at on some days in October, 2018.
-
 ```{r}
-eating_map
+board_games %>%
+  group_by(year_published) %>% 
+  summarise(num_published = n()) %>% 
+  ggplot(aes(x=year_published, y=num_published))+
+  geom_line()+
+  theme_classic()
 ```
+
+> Shiny App
+
+```{r, echo=FALSE}
+# shinyApp(
+# ui <- fluidPage(
+#   sliderInput(inputId = "year", label = "Year Published",
+#               min = 1950, max = 2019, value = c(1950,2019),sep = ""),
+#   textInput("max_players", "Max Players", value = "", placeholder = "1"),
+#   selectInput("minage", "Min age", choices = board_games$min_age),
+#   submitButton(text = "Create my plot!"),
+#   plotOutput(outputId = "timeplot")),
+# 
+# server <- function(input, output) {
+#   output$timeplot <- renderPlot({
+#     board_games %>% 
+#       arrange(min_age) %>% 
+#       filter(max_players == input$max_players, min_age == input$minage) %>% 
+#       ggplot(aes(x = year_published, y = average_rating, color=min_playtime, label = name))+
+#       geom_point()+
+#       geom_text()+
+#       scale_x_continuous(limits = input$year) +
+#       theme_classic()
+#   })
+# },
+# options = list(height=750)
+# )
+```
+
 
 ## Dataset 2: Video Games
 > *Data:* 
@@ -81,6 +73,7 @@ This dataset seems pretty interesting and straightforward
 library(readr)
 video_games <- read_csv("~/Desktop/Compsci-final/ideas/video_games.csv")
 
+video_games[video_games==0] <- NA
 vg_clean<-video_games %>% 
   drop_na() 
 ```
@@ -115,8 +108,9 @@ top_20_avrplaytime_game %>%
 
 > **Data:**
 
-```{r message=FALSE}
-pizza_jared <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_jared.csv")
+```{r message=FALSE, warning=FALSE}
+# Read Data
+pizza_jared <- readr::read_csv("https://raw.githubusercontent.com/RoanFM/Compsci-final/master/ideas/pizza_jared.csv")
 pizza_barstool <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_barstool.csv")
 pizza_datafiniti <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_datafiniti.csv")
 ```
@@ -132,21 +126,73 @@ leaflet(data=pizza_datafiniti) %>%
 ```
 
 ```{r message=FALSE, warning=FALSE}
-  mn_pizza <- pizza_datafiniti %>% 
-    filter(province == "MN")
+mn_pizza <- pizza_datafiniti %>% 
+  filter(province == "MN")
 ```
 
 > Pizza in the Minnesota
 
 ```{r message=FALSE, warning=FALSE}
-
-palmn <- colorFactor(topo.colors(5), 
-                     domain = mn_pizza$price_range_max) 
-
 leaflet(data=mn_pizza) %>% 
   addProviderTiles(providers$Stamen.Toner) %>% 
   addMarkers(lng = ~longitude, lat = ~latitude, label = ~name,clusterOptions = markerClusterOptions())
 
+```
+
+```{r message=FALSE, warning=FALSE}
+# sum the total votes and rate
+pizza_excerllent <- pizza_jared %>% 
+  filter(answer=="Excellent") %>% 
+  group_by(place) %>% 
+  mutate(sum_votes=sum(votes), sum_total=sum(total_votes)) %>% 
+  mutate(p = sum_votes/sum_total)
+
+pizza_good <- pizza_jared %>% 
+  filter(answer=="Good") %>% 
+  group_by(place) %>% 
+  mutate(sum_votes=sum(votes), sum_total=sum(total_votes)) %>% 
+  mutate(p = sum_votes/sum_total)
+
+pizza_average <- pizza_jared %>% 
+  filter(answer=="Average") %>% 
+  group_by(place) %>% 
+  mutate(sum_votes=sum(votes), sum_total=sum(total_votes)) %>% 
+  mutate(p = sum_votes/sum_total)
+
+pizza_poor <- pizza_jared %>% 
+  filter(answer=="Poor") %>% 
+  group_by(place) %>% 
+  mutate(sum_votes=sum(votes), sum_total=sum(total_votes)) %>% 
+  mutate(p = sum_votes/sum_total)
+
+pizza_never <- pizza_jared %>% 
+  filter(answer=="Never Again") %>% 
+  group_by(place) %>% 
+  mutate(sum_votes=sum(votes), sum_total=sum(total_votes)) %>% 
+  mutate(p = sum_votes/sum_total)
+
+# create pizza rating data frame
+pizza_rating <- rbind(pizza_excerllent, pizza_good, pizza_average, pizza_poor, pizza_never) %>% 
+  mutate(date = as_datetime(time)) %>% 
+  mutate(year=year(date)) %>% 
+  group_by(place, year, answer) %>% 
+  mutate(year_avr_rate = mean(p))
+```
+```{r}
+# Top ten highest Excerllent rate 
+top_ten_excerllent<-pizza_rating %>% 
+  filter(answer=="Excellent") %>% 
+  group_by(place) %>% 
+  summarise(rate = sum(p)/n()) %>% 
+  arrange(desc(rate)) %>% 
+  head(10) 
+
+# Graph
+top_ten_excerllent %>% 
+  inner_join(pizza_rating, by="place") %>% 
+  ggplot(aes(x=answer, y=percent, fill=place))+
+  geom_bar(stat='identity',position='dodge')+
+  theme_classic()
 ```
 
 
