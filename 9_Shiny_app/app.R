@@ -20,9 +20,9 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   output$timeplot <- renderPlot({
-    board_games %>% 
-      arrange(min_age) %>% 
-      filter(max_players == input$max_players, min_age == input$minage) %>% 
+    board_games %>%
+      arrange(min_age) %>%
+      filter(max_players == input$max_players, min_age == input$minage) %>%
       ggplot(aes(x = year_published, y = average_rating, color=min_playtime, label = name))+
       geom_point()+
       geom_text()+
