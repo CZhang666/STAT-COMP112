@@ -100,7 +100,9 @@ t <- tibble(department=course_dept,number=course_nums)
 course_df %>%
   inner_join(t, by="number") %>% 
   group_by(department) %>% 
-  summarise(n = n()) %>% 
+  summarise(n = n()) 
+```
+%>% 
   ggplot(aes(x=department, y=n))+
   geom_point()+
   theme_classic()
