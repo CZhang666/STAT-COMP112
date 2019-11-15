@@ -424,7 +424,7 @@ course_instructor &lt;- fall2017 %&gt;%
 course_av &lt;- fall2017 %&gt;% 
   html_nodes(&quot;td.class-schedule-label:nth-child(7)&quot;) %&gt;%
   html_text() %&gt;% 
-  str_sub(start = 14)
+  str_sub(start = 14) 
 
 course_ger &lt;- fall2017 %&gt;% 
   html_nodes(&quot;div.expandable p:nth-child(2)&quot;) %&gt;%
@@ -436,23 +436,24 @@ course_descriptios &lt;- fall2017 %&gt;%
   html_nodes(&quot;div.expandable p:nth-child(1)&quot;) %&gt;%
   html_text() %&gt;% 
   str_sub(start = 30)</code></pre>
-<pre class="r"><code>course_df &lt;- tibble(number=course_nums, name=course_names, day=course_days, time=course_time, room=course_room, instructor=course_instructor, avil_max=course_av, general_education_requirement=course_ger, description=course_descriptios)
+<pre class="r"><code>course_df &lt;- tibble(number=course_nums, name=course_names, day=course_days, time=course_time, room=course_room, instructor=course_instructor, avail_max=course_av) %&gt;% 
+  mutate(avail_max=gsub(avail_max, pattern=&quot;Closed&quot;, replacement = &quot;&quot;)) %&gt;% 
+  separate(avail_max, into = c(&quot;available&quot;, &quot;Max&quot;),sep=&quot;/&quot;) %&gt;% 
+  cbind(general_education_requirement=course_ger, description=course_descriptios)
 
-course_df</code></pre>
-<pre><code>## # A tibble: 762 x 9
-##    number name  day   time  room  instructor avil_max general_educati…
-##    &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt;           
-##  1 AMST … Expl… W     07:0… ARTC… Gutierrez… Closed … U.S. Identities…
-##  2 AMST … The … MWF   09:4… NEIL… Karin Agu… 0 / 16   U.S. Identities…
-##  3 AMST … Crit… MWF   02:2… OLRI… Nathan Ti… 13 / 20  &quot;&quot;              
-##  4 AMST … Poli… MWF   09:4… CARN… Lesley La… Closed … U.S. Identities…
-##  5 AMST … In M… MWF   01:1… MAIN… Crystal M… 2 / 20   U.S. Identities…
-##  6 AMST … Narr… MWF   10:5… MAIN… Crystal M… Closed … &quot;&quot;              
-##  7 AMST … Race… MWF   01:1… NEIL… Jonathan … Closed … &quot;&quot;              
-##  8 AMST … Race… M     07:0… NEIL… Karin Agu… Closed … U.S. Identities…
-##  9 AMST … Afri… MWF   09:4… CARN… Sarah Bel… 10 / 20  U.S. Identities…
-## 10 AMST … Publ… TR    09:4… NEIL… Harris, S… 0 / 15   &quot;&quot;              
-## # … with 752 more rows, and 1 more variable: description &lt;chr&gt;</code></pre>
+glimpse(course_df)</code></pre>
+<pre><code>## Observations: 762
+## Variables: 10
+## $ number                        &lt;chr&gt; &quot;AMST 101-01&quot;, &quot;AMST 103-01&quot;, &quot;AMS…
+## $ name                          &lt;chr&gt; &quot;Explorations of Race and Racism&quot;,…
+## $ day                           &lt;chr&gt; &quot;W&quot;, &quot;MWF&quot;, &quot;MWF&quot;, &quot;MWF&quot;, &quot;MWF&quot;, &quot;…
+## $ time                          &lt;chr&gt; &quot;07:00 pm-10:00 pm&quot;, &quot;09:40 am-10:…
+## $ room                          &lt;chr&gt; &quot;ARTCOM 102&quot;, &quot;NEILL 111&quot;, &quot;OLRI 2…
+## $ instructor                    &lt;chr&gt; &quot;Gutierrez, Harris&quot;, &quot;Karin Aguila…
+## $ available                     &lt;chr&gt; &quot; -5 &quot;, &quot;0 &quot;, &quot;13 &quot;, &quot; 0 &quot;, &quot;2 &quot;, …
+## $ Max                           &lt;chr&gt; &quot; 25&quot;, &quot; 16&quot;, &quot; 20&quot;, &quot; 25&quot;, &quot; 20&quot;,…
+## $ general_education_requirement &lt;fct&gt; U.S. Identities and Differences, U…
+## $ description                   &lt;fct&gt; &quot;The main objectives of this intro…</code></pre>
 <blockquote>
 <p>First six rows of the data frame</p>
 </blockquote>
@@ -479,7 +480,10 @@ room
 instructor
 </th>
 <th style="text-align:center;">
-avil_max
+available
+</th>
+<th style="text-align:center;">
+Max
 </th>
 <th style="text-align:center;">
 general_education_requirement
@@ -510,7 +514,10 @@ ARTCOM 102
 Gutierrez, Harris
 </td>
 <td style="text-align:center;">
-Closed -5 / 25
+-5
+</td>
+<td style="text-align:center;">
+25
 </td>
 <td style="text-align:center;">
 U.S. Identities and Differences
@@ -539,7 +546,10 @@ NEILL 111
 Karin Aguilar-San Juan
 </td>
 <td style="text-align:center;">
-0 / 16
+0
+</td>
+<td style="text-align:center;">
+16
 </td>
 <td style="text-align:center;">
 U.S. Identities and Differences Writing WA
@@ -568,7 +578,10 @@ OLRI 205
 Nathan Titman
 </td>
 <td style="text-align:center;">
-13 / 20
+13
+</td>
+<td style="text-align:center;">
+20
 </td>
 <td style="text-align:center;">
 </td>
@@ -596,7 +609,10 @@ CARN 204
 Lesley Lavery
 </td>
 <td style="text-align:center;">
-Closed 0 / 25
+0
+</td>
+<td style="text-align:center;">
+25
 </td>
 <td style="text-align:center;">
 U.S. Identities and Differences Writing WP
@@ -625,7 +641,10 @@ MAIN 010
 Crystal Moten
 </td>
 <td style="text-align:center;">
-2 / 20
+2
+</td>
+<td style="text-align:center;">
+20
 </td>
 <td style="text-align:center;">
 U.S. Identities and Differences
@@ -654,7 +673,10 @@ MAIN 001
 Crystal Moten
 </td>
 <td style="text-align:center;">
-Closed 4 / 14
+4
+</td>
+<td style="text-align:center;">
+14
 </td>
 <td style="text-align:center;">
 </td>

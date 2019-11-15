@@ -7,7 +7,8 @@ rsconnect::setAccountInfo(name='charles-zhang',
                           token='890F803ACBC5DEE28D543C5A1082EE7B',
                           secret='K+48LSVwcRAMrEn3NIbv69Gwtd3QhCrsynwFscoo')
 
-board_games <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-12/board_games.csv")
+board_games <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-12/board_games.csv") %>% 
+  mutate(min_age = fct_reorder(min_age, year_published))
 
 ui <- fluidPage(
   sliderInput(inputId = "year", label = "Year Published",
