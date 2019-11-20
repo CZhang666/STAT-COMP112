@@ -1,0 +1,34 @@
+---
+title: "Supervised Learning"
+author: "Charles Zhang"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(fivethirtyeight)
+library(lubridate)
+library(broom)              #for nice lm output
+library(caret)              #for confusion matrices
+library(e1071)              #to make caret run
+library(rpart)              #package to make trees
+library(rpart.plot)         #package to make better tree plots
+```
+
+```{r message=FALSE, warning=FALSE}
+download.file("https://www.macalester.edu/~dshuman1/data/112/MovieLens.rda", 
+                destfile = "MovieLens.rda")
+load("MovieLens.rda")
+```
+
+```{r}
+glimpse(Movies)
+```
+
+```{r}
+glimpse(Users)
+```
+
+```{r}
+glimpse(Ratings)
+```
