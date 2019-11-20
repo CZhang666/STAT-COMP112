@@ -1,0 +1,153 @@
+---
+title: "Project Check-in 2"
+author: "Charles Zhang, Roan Floer-Martinez, Jinghan Zhou, Xi Feng"
+output: 
+  html_document:
+    keep_md: yes
+---
+
+```{r message=FALSE}
+library(readr)
+library(tidyverse)
+library(lubridate)
+library(skimr) 
+library(naniar) 
+library(ggmap)
+library(gplots) 
+library(RColorBrewer) 
+library(sf) 
+library(leaflet)
+library(formattable)
+library(shiny)
+```
+
+## Dataset: Pizza Party
+
+> **Data:**
+
+```{r message=FALSE, warning=FALSE}
+# Read Data
+pizza_jared <- readr::read_csv("https://raw.githubusercontent.com/RoanFM/Compsci-final/master/Data/pizza_jared.csv") %>% 
+  unique()
+pizza_barstool <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_barstool.csv") %>% 
+  unique()
+pizza_datafiniti <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_datafiniti.csv") %>% 
+  unique()
+```
+
+> **Graphs/Tables**
+
+> Pizza in the U.S.
+
+```{r message=FALSE, warning=FALSE}
+leaflet(data=pizza_datafiniti) %>% 
+  addProviderTiles(providers$Esri.NatGeoWorldMap) %>% 
+  addCircleMarkers(lng = ~longitude, lat = ~latitude, color = "red", label=~name,stroke = FALSE, fillOpacity = 0.5, radius = 2)
+```
+
+```{r message=FALSE, warning=FALSE}
+nyc_pizza <- pizza_datafiniti %>% 
+  filter(city == "New York")
+```
+
+> Pizza in the Minnesota
+
+```{r message=FALSE, warning=FALSE}
+leaflet(data=nyc_pizza) %>% 
+  addProviderTiles(providers$Stamen.Toner) %>% 
+  addMarkers(lng = ~longitude, lat = ~latitude, label = ~name,clusterOptions = markerClusterOptions())
+
+```
+
+```{r message=FALSE, warning=FALSE}
+# sum the total votes and rate
+pizza_excellent <- pizza_jared %>% 
+  filter(answer=="Excellent") %>% 
+  group_by(place) %>% 
+  mutate(sum_votes=sum(votes), sum_total=sum(total_votes)) %>% 
+  mutate(p = sum_votes/sum_total)
+
+pizza_good <- pizza_jared %>% 
+  filter(answer=="Good") %>% 
+  group_by(place) %>% 
+  mutate(sum_votes=sum(votes), sum_total=sum(total_votes)) %>% 
+  mutate(p = sum_votes/sum_total)
+
+pizza_average <- pizza_jared %>% 
+  filter(answer=="Average") %>% 
+  group_by(place) %>% 
+  mutate(sum_votes=sum(votes), sum_total=sum(total_votes)) %>% 
+  mutate(p = sum_votes/sum_total)
+
+pizza_poor <- pizza_jared %>% 
+  filter(answer=="Poor") %>% 
+  group_by(place) %>% 
+  mutate(sum_votes=sum(votes), sum_total=sum(total_votes)) %>% 
+  mutate(p = sum_votes/sum_total)
+
+pizza_never <- pizza_jared %>% 
+  filter(answer=="Never Again") %>% 
+  group_by(place) %>% 
+  mutate(sum_votes=sum(votes), sum_total=sum(total_votes)) %>% 
+  mutate(p = sum_votes/sum_total)
+
+# create pizza rating data frame
+pizza_rating <- rbind(pizza_excellent, pizza_good, pizza_average, pizza_poor, pizza_never) %>% 
+  mutate(date = as_datetime(time)) %>% 
+  mutate(year=year(date)) %>% 
+  group_by(place, year, answer) %>% 
+  mutate(year_avr_rate = mean(p)) 
+
+glimpse(pizza_rating)
+```
+```{r}
+# Top ten highest Excerllent rate 
+top_ten_excellent<-pizza_rating %>% 
+  filter(answer=="Excellent") %>% 
+  group_by(place) %>% 
+  summarise(Excellent = sum(year_avr_rate)/n()) %>% 
+  arrange(desc(Excellent)) %>% 
+  head(10) 
+
+# Other answers for these ten pizzas
+top_exe_good <- top_ten_excellent %>% 
+  inner_join(pizza_rating, by="place") %>% 
+  filter(answer=="Good") %>% 
+  group_by(place) %>% 
+  summarise(Good = sum(year_avr_rate)/n()) 
+
+top_exe_avr<- top_ten_excellent %>% 
+  inner_join(pizza_rating, by="place") %>% 
+  filter(answer=="Average") %>% 
+  group_by(place) %>% 
+  summarise(Average = sum(year_avr_rate)/n()) 
+
+top_exe_poor<- top_ten_excellent %>% 
+  inner_join(pizza_rating, by="place") %>% 
+  filter(answer=="Poor") %>% 
+  group_by(place) %>% 
+  summarise(Poor = sum(year_avr_rate)/n()) 
+
+top_exe_never<- top_ten_excellent %>% 
+  inner_join(pizza_rating, by="place") %>% 
+  filter(answer=="Never Again") %>% 
+  group_by(place) %>% 
+  summarise(Never_Again = sum(year_avr_rate)/n())
+
+top_ten_excellent_analysis <- top_ten_excellent %>% 
+  inner_join(top_exe_good,by = "place") %>% 
+  inner_join(top_exe_avr,by = "place") %>% 
+  inner_join(top_exe_poor,by = "place") %>% 
+  inner_join(top_exe_never,by = "place") %>% 
+  pivot_longer(cols= -place,names_to = "Answers",values_to = "Proportion")
+```
+```{r, fig.width=8}
+# Graph
+top_ten_excellent_analysis %>% 
+  ggplot(aes(x=place, y=Proportion, fill=Answers))+
+  geom_bar(stat='identity')+
+  scale_fill_manual("legend", values = c("darkorchid2","dodgerblue2","darkgoldenrod1","cyan3","brown3"))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle=45, hjust=1))+
+  xlab("Place")
+```
