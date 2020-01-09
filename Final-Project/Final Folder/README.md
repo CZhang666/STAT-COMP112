@@ -1,9 +1,6 @@
----
-output: 
-  html_document:
-    keep_md: yes
----
-
+This is ***COMP/STAT 112 Intro to the Data Science*** final group project at Macalester College. <br>
+It seems like everyone has a favorite pizzeria. Whether it’s the one that delivers until 2 AM, the one
+with the best sauce, or the really cheap one down the block, it’s very hard to find a pizzeria that everyone will like. Using some data from TidyTuesday’s Pizza Party dataset, we tried to solve this problem by R.<br>For more interactive graphs and maps with Leaflet, please visit my [Github Repository](https://github.com/CZhang666/STAT-COMP112/tree/master/Final-Project) or download the [html file](https://github.com/CZhang666/STAT-COMP112/blob/master/Final-Project/Final.html).
 
 
 
