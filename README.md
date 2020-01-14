@@ -10,4 +10,4 @@ __Author:__ ***<a href="https://github.com/CZhang666" unselectable="on" title="M
 - [Interactivity and Animation & Dynamic maps with Leaflet](https://github.com/CZhang666/STAT-COMP112/tree/master/7%20Interactivity%20and%20Animation%20%26%20Dynamic%20maps%20with%20Leaflet)
 - [Quizzes](https://github.com/CZhang666/STAT-COMP112/tree/master/Quiz)
 - [Final Project](https://github.com/CZhang666/STAT-COMP112/tree/master/Final-Project)
-- [R Programming lectures](https://github.com/CZhang666/STAT-COMP112/tree/master/Introduction%20to%20R%20Programming)
+- [R Programming](https://github.com/CZhang666/STAT-COMP112/tree/master/Introduction%20to%20R%20Programming)
